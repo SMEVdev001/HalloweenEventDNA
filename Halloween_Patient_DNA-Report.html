@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>พิธีคัดสรรบ้านรอยยิ้มเวทมนตร์ - Halloween Edition</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #1a1a1a;
+            --accent-color: #d4af37;
+            --bg-color: #0d0d0d;
+            --card-bg: #1f1f1f;
+            --text-color: #f2f2f2;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: var(--card-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
+            width: 100%;
+            max-width: 680px;
+            padding: 35px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        h1, h2 { color: var(--accent-color); }
+        
+        /* สไตล์สำหรับรูปฉากประกอบคำถาม (สัดส่วนแนวนอน) */
+        .question-img-container {
+            width: 100%;
+            height: 220px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            border: 1px solid #444;
+            background: #2c2c2c;
+        }
+        .question-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .option-label {
+            display: flex; align-items: flex-start; gap: 12px; background: #2c2c2c;
+            padding: 14px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-bottom: 10px; transition: background 0.2s, border-color 0.2s; text-align: left; border: 1px solid #444; color: #fff;
+        }
+        .option-label:hover { background: #3c3c3c; border-color: var(--accent-color); }
+        .btn-submit {
+            background-color: var(--accent-color); color: #000; border: none;
+            padding: 14px 25px; font-size: 16px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; transition: opacity 0.2s;
+        }
+        .btn-submit:hover { opacity: 0.85; }
+        .hidden { display: none !important; }
+        
+        .house-hero-box {
+            padding: 10px 0;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .house-img {
+            max-width: 100%;
+            height: auto;
+            max-height: 380px;
+            border-radius: 10px;
+            border: 2px solid var(--accent-color);
+            margin-bottom: 15px;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+        .score-display {
+            font-size: 15px; margin: 15px 0; background: #2c2c2c;
+            padding: 20px; border-radius: 12px; text-align: left; line-height: 1.7; border: 1px solid #444;
+        }
+        .input-box {
+            width: 100%; padding: 12px; font-size: 16px; background: #2c2c2c; border: 1px solid #555; color: #fff; border-radius: 8px; box-sizing: border-box; margin-bottom: 15px; text-align: left;
+        }
+        .voucher-box {
+            background: #2a2510; border: 2px dashed var(--accent-color); padding: 15px; border-radius: 8px; margin-top: 15px; font-weight: bold; color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    <!-- หน้าแรก -->
+    <div id="welcome-section">
+        <h1 style="font-size: 26px;">🎃 🪄 หมวกคัดสรรแห่งโลกเวทมนตร์</h1>
+        <p style="color: #bbb; line-height: 1.6;">ต้อนรับเทศกาลฮาโลวีน! ก้าวเข้าสู่โลกพ่อมดแม่มดฝึกหัด ตอบคำถาม 6 ข้อเพื่อค้นหาว่าคุณเหมาะกับ <b>"บ้านรอยยิ้ม"</b> หลังไหน พร้อมรับสิทธิ์รับของที่ระลึกสุดพิเศษที่หน้าคลินิก!</p>
+        
+        <div style="margin-top: 25px; text-align: left;">
+            <label style="font-weight: bold; display: block; margin-bottom: 8px; color: var(--accent-color);">ชื่อเล่นของคุณ:</label>
+            <input type="text" id="user-name" class="input-box" placeholder="เช่น แม่มดมินท์, พ่อมดป๊อป..." autocomplete="off">
+            
+            <label style="font-weight: bold; display: block; margin-bottom: 8px; color: var(--accent-color);">เบอร์โทรศัพท์ (สำหรับยืนยันรับของรางวัล):</label>
+            <input type="tel" id="user-phone" class="input-box" placeholder="0812345678" maxlength="10" autocomplete="off">
+        </div>
+
+        <button class="btn-submit" onclick="startQuiz()">เริ่มพิธีคัดสรรบ้าน ⚡</button>
+    </div>
+
+    <!-- หน้าทำแบบทดสอบ (6 ข้อเวทมนตร์ + รูปฉากประกอบ) -->
+    <div id="quiz-section" class="hidden">
+        <h2 id="quiz-title"></h2>
+        <div id="progress-bar" style="background: #333; height: 6px; border-radius: 3px; margin-bottom: 15px;">
+            <div id="progress-fill" style="background: var(--accent-color); height: 100%; width: 0%; border-radius: 3px; transition: width 0.3s;"></div>
+        </div>
+        
+        <!-- กรอบรูปฉากประกอบคำถาม -->
+        <div class="question-img-container">
+            <img id="question-image" class="question-img" src="" alt="Magic Scene">
+        </div>
+
+        <div id="question-container" style="text-align: left;"></div>
+        <button class="btn-submit" onclick="nextQuestion()">ร่ายคาถาแล้วไปต่อ ➔</button>
+    </div>
+
+    <!-- หน้าแสดงผลลัพธ์บ้าน -->
+    <div id="result-section" class="hidden">
+        <h2>🔮 หมวกคัดสรรประกาศผล!</h2>
+        
+        <div class="house-hero-box">
+            <img id="house-image" class="house-img" src="" alt="Hogwarts House">
+            <div id="house-title" style="font-size: 24px; font-weight: bold; color: var(--accent-color);"></div>
+            <div id="house-sub" style="font-size: 15px; color: #ccc; margin-top: 8px; line-height: 1.5;"></div>
+        </div>
+
+        <div class="result-box">
+            <div class="score-display" id="score-text"></div>
+            
+            <div class="voucher-box">
+                🎁 แคปหน้าจอนี้ หรือแจ้งชื่อ-เบอร์โทร กับพี่ๆ เคาน์เตอร์<br>เพื่อรับของที่ระลึก Halloween ฟรีทันที!
+            </div>
+
+            <button class="btn-submit" style="background-color: #444; color: #fff; margin-top: 15px;" onclick="location.reload()">ทำพิธีคัดสรรใหม่อีกครั้ง</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzcllNd63i_7yWO7cgbPqjQrGzXPnxQPYS16nPedHfA2I7En80PLPokcCq5Fdq6uFNS1Q/exec";
+
+    const HOUSE_IMAGES = {
+        "Roarsmile": "https://smevdental.com/wp-content/uploads/2026/09/HouseROARSMILE.jpeg",
+        "Rootbear": "https://smevdental.com/wp-content/uploads/2026/09/HouseROOTBEAR.jpeg",
+        "Whitetusk": "https://smevdental.com/wp-content/uploads/2026/09/HouseWHITETUSK.jpeg",
+        "Hootooth": "https://smevdental.com/wp-content/uploads/2026/09/HouseHOOTOOTH.jpeg"
+    };
+
+    // 📜 6 สถานการณ์เวทมนตร์ พร้อมลิงก์รูปภาพประกอบตรงตัว
+    const magicQuestions = [
+        {
+            q: "ก้าวแรกเมื่อคุณเดินทางมาถึงตรอกไดแอกอนเพื่อเตรียมอุปกรณ์เวทมนตร์ สิ่งแรกที่คุณจะทำคือ...",
+            image: "https://smevdental.com/wp-content/uploads/2026/09/HalloweenEventQuiz1.jpeg",
+            o: [
+                "พุ่งตรงไปร้านไม้กายสิทธิ์ เล็งไม้อันที่ทรงพลังที่สุดแล้วจ่ายเงินจบใน 5 นาที",
+                "แวะร้านหนังสือเพื่อกางตำรา อ่านคู่มือคาถาและตรวจสอบรายการอุปกรณ์ให้ครบถ้วนเป๊ะตามกฎ",
+                "แวะทักทายพูดคุยกับพ่อมดแม่มดร้านข้างๆ ช่วยเหลือเด็กปีหนึ่งที่กำลังหลงทางด้วยความเอ็นดู",
+                "สนใจแวะร้านขายตำราเวทมนตร์โบราณและประดิษฐ์กลร์คาถาแปลกๆ ที่ไม่มีใครเหมือน"
+            ]
+        },
+        {
+            q: "ในคาบเรียนคาถาป้องกันตัวจากศาสตร์มืด จู่ๆ ศัตรูตัวฉกาจก็ปรากฏตัวขึ้น คุณจะเลือกใช้คาถาแบบไหน?",
+            image: "https://smevdental.com/wp-content/uploads/2026/09/HalloweenEventQuiz2.jpeg",
+            o: [
+                "ร่ายคาถาปลดอาวุธสวนกลับด้วยความรวดเร็วและเด็ดเดี่ยวทันที",
+                "ร่ายเกราะป้องกันตัวรอบทิศทางอย่างรอบคอบและมั่นคงที่สุด",
+                "ถอยมาระวังหลังให้เพื่อนร่วมชั้น แล้วร่ายคาถาช่วยเหลือทุกคนให้ปลอดภัยไปด้วยกัน",
+                "ร่ายคาถาประหลาดสร้างสรรค์ที่เพิ่งคิดค้นขึ้นใหม่เพื่อพลิกแพลงสถานการณ์"
+            ]
+        },
+        {
+            q: "เมื่อต้องเดินเข้าไปใน 'ป่าต้องห้าม' ตามภารกิจยามค่ำคืน ความรู้สึกของคุณคือ...",
+            image: "https://smevdental.com/wp-content/uploads/2026/09/HalloweenEventQuiz3.jpeg",
+            o: [
+                "เดินนำหน้าเปิดทางด้วยความมั่นใจ อยากให้ภารกิจจบไวและชนะเลิศ",
+                "เช็กแผนทิศทางและเตรียมห่อสมุนไพรป้องกันภัยในกระเป๋าให้พร้อมตามระเบียบ",
+                "รู้สึกกังวลนิดๆ แต่คอยจับมือเดินเคียงข้างเพื่อนร่วมทีมเพื่อให้กำลังใจกันตลอดทาง",
+                "ตื่นเต้นและทึ่งกับการได้ศึกษาพฤติกรรมของสัตว์วิเศษแปลกๆ ในป่า"
+            ]
+        },
+        {
+            q: "วันนี้เป็นวันสอบวิชาปรุงยา หม้อปรุงยาของคุณเกิดควันพวยพุ่งและสีเพี้ยน คุณจะแก้สถานการณ์อย่างไร?",
+            image: "https://smevdental.com/wp-content/uploads/2026/09/HalloweenEventQuiz4.jpeg",
+            o: [
+                "เทส่วนผสมแก้เกมลงไปด่วนๆ ให้มันเดือดแล้วได้ผลลัพธ์ไวที่สุด",
+                "เปิดตำราหน้าสูตรยา เช็กสัดส่วนตัวเลขและอุณหภูมิให้ถูกต้องตามหลักเป๊ะๆ",
+                "หันไปขอความช่วยเหลือจากเพื่อนข้างๆ และช่วยกันแก้ปัญหาด้วยรอยยิ้ม",
+                "ปรับเปลี่ยนสูตรใส่ส่วนผสมลับชิ้นใหม่ลงไปเพื่อดูปฏิกิริยาทางเวทมนตร์ที่น่าสนใจ"
+            ]
+        },
+        {
+            q: "ถ้าคุณสามารถเลือกสัตว์วิเศษคู่กายที่จะอยู่ข้างกายคุณไปตลอดชีวิตได้ คุณจะเลือก...",
+            image: "https://smevdental.com/wp-content/uploads/2026/09/HalloweenEventQuiz5.jpeg",
+            o: [
+                "สิงโตเวทมนตร์ ผู้สง่างาม กล้าหาญ และพร้อมพุ่งชนทุกอุปสรรค",
+                "หมีพิทักษ์แห่งขุนเขา ผู้ทรงพลัง อดทน และปกป้องอาณาเขตอย่างมั่นคง",
+                "ช้างทมิฬแห่งป่าลึก ผู้ใจดี อบอุ่น และเป็นศูนย์รวมจิตใจของพ้องเพื่อน",
+                "นกฮูกหิมะโบราณ ผู้รอบรู้ มองการณ์ไกล และเต็มไปด้วยปัญญาญาณ"
+            ]
+        },
+        {
+            q: "ข้อความเวทมนตร์ (Review) จากรุ่นพี่ฮอกวอตส์แบบไหนที่จะทำให้คุณอยากเข้าเรียนบ้านนั้นมากที่สุด?",
+            image: "https://smevdental.com/wp-content/uploads/2026/09/HalloweenEventQuiz6.jpeg",
+            o: [
+                "บ้านนี้พาคว้าชัยชนะได้ไวที่สุด กิจกรรมสนุกและเด็ดขาดมาก!",
+                "บ้านนี้มีระเบียบวินัย ความปลอดภัยสูงสุด ตำราครบถ้วน ไร้ที่ติ",
+                "บ้านนี้อบอุ่นเหมือนครอบครัว พี่น้องรักกัน คอยดูแลซัพพอร์ตตลอดเวลา",
+                "บ้านนี้เต็มไปด้วยนวัตกรรมเวทมนตร์ล้ำๆ และห้องสมุดคาถาที่กว้างใหญ่ที่สุด"
+            ]
+        }
+    ];
+
+    let currentQIndex = 0;
+    let userAnswers = [];
+    let currentShuffledMapping = [];
+    let userName = '';
+    let userPhone = '';
+
+    function startQuiz() {
+        const nameInput = document.getElementById('user-name').value.trim();
+        const phoneInput = document.getElementById('user-phone').value.trim();
+        
+        if (!nameInput) {
+            alert('กรุณากรอกชื่อเล่นของคุณก่อนเริ่มพิธีคัดสรรครับ');
+            document.getElementById('user-name').focus();
+            return;
+        }
+        if (!phoneInput || phoneInput.length < 9) {
+            alert('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้องสำหรับรับสิทธิ์ครับ');
+            document.getElementById('user-phone').focus();
+            return;
+        }
+
+        userName = nameInput;
+        userPhone = phoneInput;
+        currentQIndex = 0;
+        userAnswers = [];
+        
+        document.getElementById('welcome-section').classList.add('hidden');
+        document.getElementById('quiz-section').classList.remove('hidden');
+        loadQuestion();
+    }
+
+    function shuffleOptionsWithMapping(options) {
+        let indices = [0, 1, 2, 3];
+        for (let i = indices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [indices[i], indices[j]] = [indices[j], indices[i]];
+        }
+        let shuffledText = [];
+        let mapping = [];
+        for (let i = 0; i < 4; i++) {
+            shuffledText.push(options[indices[i]]);
+            mapping.push(indices[i]);
+        }
+        return { text: shuffledText, map: mapping };
+    }
+
+    function loadQuestion() {
+        if (currentQIndex < magicQuestions.length) {
+            document.getElementById('quiz-title').innerText = `บททดสอบที่ ${currentQIndex + 1} / ${magicQuestions.length}`;
+            const percent = (currentQIndex / magicQuestions.length) * 100;
+            document.getElementById('progress-fill').style.width = percent + '%';
+
+            let currentQ = magicQuestions[currentQIndex];
+            
+            // แสดงรูปฉากประกอบประจำข้อ
+            document.getElementById('question-image').src = currentQ.image;
+
+            const shuffled = shuffleOptionsWithMapping(currentQ.o);
+            currentShuffledMapping = shuffled.map;
+
+            let html = `
+                <p style="font-size:16px; font-weight:bold; color:var(--accent-color); line-height:1.5; margin-bottom:12px;">🔮 ${currentQ.q}</p>
+                <div style="margin-bottom: 10px; display: flex; flex-direction: column;">`;
+            
+            shuffled.text.forEach((optText, idx) => {
+                html += `<label class="option-label">
+                    <input type="radio" name="q_opt" value="${idx}"> ${optText}
+                </label>`;
+            });
+            html += `</div>`;
+            document.getElementById('question-container').innerHTML = html;
+        } else {
+            document.getElementById('progress-fill').style.width = '100%';
+            setTimeout(showResult, 300);
+        }
+    }
+
+    function nextQuestion() {
+        const selected = document.querySelector('input[name="q_opt"]:checked');
+        if (!selected) {
+            alert('กรุณาเลือกเส้นทางเวทมนตร์ที่คุณต้องการครับ');
+            return;
+        }
+        const uiIndex = parseInt(selected.value);
+        userAnswers.push(currentShuffledMapping[uiIndex]);
+        currentQIndex++;
+        loadQuestion();
+    }
+
+    function showResult() {
+        document.getElementById('quiz-section').classList.add('hidden');
+        document.getElementById('result-section').classList.remove('hidden');
+
+        confetti({
+            particleCount: 120,
+            spread: 80,
+            origin: { y: 0.6 }
+        });
+
+        let tally = [0, 0, 0, 0];
+        userAnswers.forEach(ans => tally[ans]++);
+
+        let maxVotes = -1, primaryIndex = -1;
+        for(let i=0; i<4; i++) {
+            if(tally[i] > maxVotes) { maxVotes = tally[i]; primaryIndex = i; }
+        }
+
+        let secondVotes = -1, secondaryIndex = -1;
+        for(let i=0; i<4; i++) {
+            if(i !== primaryIndex && tally[i] > secondVotes) { secondVotes = tally[i]; secondaryIndex = i; }
+        }
+
+        const houseNames = ["Roarsmile", "Rootbear", "Whitetusk", "Hootooth"];
+        const houseThaiNames = ["บ้านยิ้มคำราม (Roarsmile)", "บ้านหมีรากมั่น (Rootbear)", "บ้านงาประกาย (Whitetusk)", "บ้านฟันนกฮูก (Hootooth)"];
+        const bankCodes = ["A (Action)", "B (Blueprint)", "N (Nurturing)", "K (Knowledge)"];
+
+        let primaryHouse = houseNames[primaryIndex];
+        let secondaryHouse = houseNames[secondaryIndex];
+        let selectedImgUrl = HOUSE_IMAGES[primaryHouse] || "";
+        
+        document.getElementById('house-image').src = selectedImgUrl;
+        document.getElementById('house-title').innerText = `${userName} ได้สังกัด: ${houseThaiNames[primaryIndex]}`;
+        document.getElementById('house-sub').innerHTML = `บ้านหลักของคุณคือ <b>${houseThaiNames[primaryIndex]}</b><br>พลังเวทมนตร์เสริมคือ <b>${houseThaiNames[secondaryIndex]}</b>`;
+
+        const houseDescriptions = {
+            "Roarsmile": "<b>🦁 บ้านยิ้มคำราม (Action):</b> ผู้กล้าหาญ เด็ดเดี่ยว ตัดสินใจเร็ว และมุ่งมั่นพุ่งชนทุกเป้าหมายด้วยสปีดที่รวดเร็ว",
+            "Rootbear": "<b>🐻 บ้านหมีรากมั่น (Blueprint):</b> ผู้มีความรอบคอบ ยึดมั่นในระเบียบวินัย ความปลอดภัย และวางระบบทุกอย่างอย่างสมบูรณ์แบบ",
+            "Whitetusk": "<b>🐘 บ้านงาประกาย (Nurturing):</b> ผู้เต็มไปด้วยความอบอุ่น เมตตา ใส่ใจความรู้สึกพ้องเพื่อน และคอยซัพพอร์ตดูแลกันตลอดไป",
+            "Hootooth": "<b>🦉 บ้านฟันนกฮูก (Knowledge):</b> ผู้มีวิสัยทัศน์กว้างไกล ชื่นชอบนวัตกรรม เทคโนโลยี และการเรียนรู้สิ่งใหม่ๆ ที่สร้างสรรค์"
+        };
+
+        document.getElementById('score-text').innerHTML = `
+            <strong>✨ ผลการคัดสรรคาถาเวทมนตร์:</strong><br>
+            <p style="margin: 8px 0 0 0; color: #ddd; line-height: 1.6;">${houseDescriptions[primaryHouse]}</p>
+        `;
+
+        const payload = {
+            name: userName,
+            phone: userPhone,
+            department: "Halloween_HarryPotter",
+            primaryAnimal: primaryHouse,
+            secondaryAnimal: secondaryHouse,
+            bankPrimaryCode: bankCodes[primaryIndex],
+            bankSecondaryCode: bankCodes[secondaryIndex],
+            scoreActionBull: tally[0],
+            scoreBlueprintBear: tally[1],
+            scoreNurturingMouse: tally[2],
+            scoreKnowledgeEagle: tally[3]
+        };
+
+        fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        }).catch(() => {});
+    }
+</script>
+
+</body>
+</html>
